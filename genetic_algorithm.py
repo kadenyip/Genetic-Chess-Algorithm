@@ -1,8 +1,10 @@
 import chess
 import random
+import math
+import chess.polyglot
 
 population_size = 50
-mutation_rate = 50
+mutation_rate = 0.1
 generations = 20
 
 # In chess, pawn = 1.0, knights = 3.0, bishops = 3.0
@@ -30,19 +32,23 @@ def get_material_score(board, piece_values, color):
             score -= val
     return score
 
-def choose_move(board, genome, color):
+def choose_move(board, genome, color, depth = 1):
     best_move = None
     best_score = -200.0
 
     for move in board.legal_moves:
         board.push(move)
-        score = get_material_score(board, genome, color)
+        score = minimax(board, depth - 1, -math.inf, math.inf, False, genome, color)
         board.pop()
 
         if score > best_score:
             best_score = score
             best_move = move
-        return best_move
+
+    if best_move is None:
+        best_move = random.choice(list(board.legal_moves))
+
+    return best_move
 
 def calculate_fitness(genome):
     board = chess.Board()
@@ -85,5 +91,40 @@ def evolve(population):
         child = crossover(p1, p2)
         child = mutate(child)
         next_generation.append(child)
-        
     return next_generation
+
+def minimax(board, depth, alpha, beta, maximizing_player, genome, color):
+    # Base Case
+    if depth == 0 or board.is_game_over():
+        return get_material_score(board, genome, color)
+    
+    if maximizing_player:
+        max_eval = -math.inf
+        for move in board.legal_moves:
+            board.push(move)
+
+            eval = minimax(board, depth - 1, alpha, beta, False, genome, color)
+            board.pop()
+
+            max_eval = max(max_eval, eval)
+            alpha = max(alpha, eval)
+
+            if beta <= alpha:
+                break
+        return max_eval
+
+    else: 
+        min_eval = math.inf
+        for move in board.legal_moves:
+            board.push(move)
+
+            eval = minimax(board, depth - 1, alpha, beta, True, genome, color)
+            board.pop()
+
+            min_eval = min(min_eval, eval)
+            beta = min(beta, eval)
+            
+            if beta <= alpha: 
+                break
+        return min_eval
+    
