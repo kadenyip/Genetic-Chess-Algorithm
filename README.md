@@ -10,3 +10,5 @@ Opponent random moveset issue
 Minimax and alpha beta solution
 
 SAN to FEN fix
+
+Polyglot books were being consistently beat by my genetic algorithm so I transitioned over to playing versus stockfish
