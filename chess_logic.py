@@ -1,23 +1,14 @@
 import chess
 import random
 import chess.svg
+import chess.polyglot
 from stockfish import Stockfish
 
 # Chess board intialization and the string is the ID for the starting positions
 board = chess.Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
 
 # Stockfish initialization to recieve data on the current game evaluation
-# Use the raw string 'r' prefix so Windows backslashes don't cause errors
-engine = Stockfish(
-    path=r"C:\Users\Andy\Downloads\stockfish\stockfish-windows-x86-64-universal.exe", 
-    depth=10, 
-    parameters={
-        "Threads": 2, 
-        "Hash": 500,         
-        "Skill Level": 20,        
-        "Minimum Thinking Time": 2 
-    }
-)
+engine = Stockfish(path=r"C:\Users\Andy\Downloads\stockfish\stockfish-windows-x86-64-universal.exe")
 
 def save_board_svg(filename="board.svg"):
     svg_data = chess.svg.board(board)
@@ -71,7 +62,25 @@ def get_current_evaluation():
             return -100.0
     return 0.0
 
+def get_opponent_move(board):
+    try:
+        with chess.polyglot.open_reader("gm2001.bin") as reader:
+            book_entry = reader.weighted_choice(board)
+            return book_entry.move
+        
+    except IndexError:
+        pass
+        
+    except FileNotFoundError:
+        print("Warning: book.bin not found. Playing randomly.")
+        pass
+    return random.choice(list(board.legal_moves))
 
+def play_opponent_move():
+    move = get_opponent_move(board)
+    board.push(move)
+    save_board_svg()
+    print(f"Opponent played {move}")
 
 save_board_svg()
 
